@@ -1,0 +1,43 @@
+# pose_estimator_params.yaml
+# Parameters for pose_estimator.py — 2D bbox → 3D grasp pose conversion.
+#
+# Scene geometry (must match pick_and_place_env.sdf):
+#   camera overhead_camera: position (0, 0, 1.90), looking straight down
+#   table surface:          z = 0.780 m
+#
+# Box heights (from SDF models/):
+#   small  0.06 × 0.04 × 0.04 m  → h = 0.04 m
+#   medium 0.10 × 0.07 × 0.06 m  → h = 0.06 m
+#   large  0.16 × 0.12 × 0.10 m  → h = 0.10 m
+#
+# Sign parameters (calibration):
+#   x_sign  / y_sign  control how pixel axes map to world XY.
+#   yaw_sign controls the sign of the box angle relative to world yaw.
+#   Default values assume Gazebo Harmonic overhead camera convention:
+#     +u (pixel right) → +X_world   → x_sign  = +1.0
+#     +v (pixel down)  → −Y_world   → y_sign  = −1.0
+#     image OBB angle  = world yaw  → yaw_sign = +1.0
+#   If objects appear mirrored along one axis, negate that sign here.
+
+pose_estimator:
+  ros__parameters:
+    # Camera position in world frame (metres)
+    camera_x: 0.0
+    camera_y: 0.0
+    camera_z: 1.90
+
+    # Table surface height in world frame (metres)
+    table_z: 0.780
+
+    # Gripper approach height above box top (metres).
+    # Set to reach the top face of the box with the gripper fully open.
+    gripper_standoff: 0.05
+
+    # TF frame used for published grasp poses
+    grasp_frame: "world"
+
+    # Pixel-to-world sign parameters
+    # Gazebo Harmonic overhead camera (pitch=π/2): v→X (x_sign=-1), u→-Y (y_sign=-1)
+    x_sign:   -1.0
+    y_sign:   -1.0
+    yaw_sign:  1.0

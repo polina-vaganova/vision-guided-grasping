@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<sdf version="1.9">
+  <!--
+    Монтажная стойка для UR5.
+    Размеры: 0.14 x 0.14 x H м
+    Высота H подбирается в world-файле под высоту стола.
+    Стойка ставится рядом со столом, основание UR5 — на её верхней грани.
+  -->
+  <model name="robot_mount">
+    <static>true</static>
+    <link name="mount_link">
+      <!-- Тело стойки: центр на z = H/2 от основания модели -->
+      <visual name="body_visual">
+        <pose>0 0 0.375 0 0 0</pose>
+        <geometry>
+          <box><size>0.14 0.14 0.75</size></box>
+        </geometry>
+        <material>
+          <ambient>0.25 0.25 0.30 1</ambient>
+          <diffuse>0.35 0.35 0.40 1</diffuse>
+          <specular>0.4 0.4 0.4 1</specular>
+        </material>
+      </visual>
+      <collision name="body_col">
+        <pose>0 0 0.375 0 0 0</pose>
+        <geometry>
+          <box><size>0.14 0.14 0.75</size></box>
+        </geometry>
+      </collision>
+      <!-- Крепёжная пластина сверху -->
+      <visual name="plate_visual">
+        <pose>0 0 0.765 0 0 0</pose>
+        <geometry>
+          <box><size>0.18 0.18 0.03</size></box>
+        </geometry>
+        <material>
+          <ambient>0.15 0.15 0.18 1</ambient>
+          <diffuse>0.20 0.20 0.25 1</diffuse>
+          <specular>0.6 0.6 0.6 1</specular>
+        </material>
+      </visual>
+      <collision name="plate_col">
+        <pose>0 0 0.765 0 0 0</pose>
+        <geometry>
+          <box><size>0.18 0.18 0.03</size></box>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

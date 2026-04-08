@@ -1,0 +1,265 @@
+<?xml version="1.0"?>
+<!--
+  Pick and Place — ENVIRONMENT ONLY (no UR5).
+  UR5 is spawned separately from URDF via ROS 2 / ros_gz_sim.
+
+  Coordinate reference:
+    Table surface:  z = 0.780 m
+    Robot mount top: z = 0.780 m  (same level)
+    UR5 base:       z = 0.780 m  (spawned at pose 0 -0.58 0.780)
+-->
+<sdf version="1.9">
+  <world name="pick_and_place">
+
+    <!-- Physics -->
+    <physics name="default_physics" type="ode">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+      <real_time_update_rate>1000</real_time_update_rate>
+    </physics>
+
+    <!-- Plugins -->
+    <plugin filename="gz-sim-physics-system"           name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system"     name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-sensors-system"           name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+    <plugin filename="gz-sim-contact-system"           name="gz::sim::systems::Contact"/>
+
+    <!-- Lighting -->
+    <light name="sun" type="directional">
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.9 0.9 0.9 1</diffuse>
+      <specular>0.3 0.3 0.3 1</specular>
+      <direction>-0.5 0.1 -0.9</direction>
+      <cast_shadows>true</cast_shadows>
+    </light>
+    <light name="fill" type="directional">
+      <pose>0 0 5 0 0 0</pose>
+      <diffuse>0.35 0.35 0.45 1</diffuse>
+      <specular>0 0 0 1</specular>
+      <direction>0.5 -0.1 -0.9</direction>
+      <cast_shadows>false</cast_shadows>
+    </light>
+
+    <!-- Ground — concrete-grey floor -->
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="col">
+          <geometry><plane><normal>0 0 1</normal><size>20 20</size></plane></geometry>
+          <surface><friction><ode><mu>1.0</mu><mu2>1.0</mu2></ode></friction></surface>
+        </collision>
+        <visual name="vis">
+          <geometry><plane><normal>0 0 1</normal><size>20 20</size></plane></geometry>
+          <material>
+            <ambient>0.28 0.29 0.30 1</ambient>
+            <diffuse>0.38 0.39 0.40 1</diffuse>
+            <specular>0.02 0.02 0.02 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Walls — visual only, no collision. Robot is at y=-0.58, table at y=0;
+         "behind robot" = more negative y. Room ~12 × 10 m, walls 3.5 m tall. -->
+    <model name="wall_back">
+      <static>true</static>
+      <link name="link">
+        <pose>0 -5.0 1.75 0 0 0</pose>
+        <visual name="vis">
+          <geometry><box><size>12 0.05 3.5</size></box></geometry>
+          <material>
+            <ambient>0.78 0.74 0.66 1</ambient>
+            <diffuse>0.85 0.81 0.72 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="wall_left">
+      <static>true</static>
+      <link name="link">
+        <pose>-6.0 0 1.75 0 0 0</pose>
+        <visual name="vis">
+          <geometry><box><size>0.05 10 3.5</size></box></geometry>
+          <material>
+            <ambient>0.78 0.74 0.66 1</ambient>
+            <diffuse>0.85 0.81 0.72 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <model name="wall_right">
+      <static>true</static>
+      <link name="link">
+        <pose>6.0 0 1.75 0 0 0</pose>
+        <visual name="vis">
+          <geometry><box><size>0.05 10 3.5</size></box></geometry>
+          <material>
+            <ambient>0.78 0.74 0.66 1</ambient>
+            <diffuse>0.85 0.81 0.72 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+<!-- Table: surface z=0.780 -->
+    <include>
+      <uri>model://table</uri>
+      <name>table</name>
+      <pose>0 0 0 0 0 0</pose>
+    </include>
+
+    <!-- Robot mount (visual only, UR5 spawned via ROS 2) -->
+    <include>
+      <uri>model://robot_mount</uri>
+      <name>robot_mount</name>
+      <pose>0 -0.58 0 0 0 0</pose>
+    </include>
+
+    <!-- Destination tray -->
+    <include>
+      <uri>model://destination_tray</uri>
+      <name>destination_tray</name>
+      <pose>0.825 0 0 0 0 0</pose>
+    </include>
+
+    <!-- Boxes on table — 10 inline models of arbitrary sizes, all class "box".
+         z_center = 0.780 + height/2
+         Sizes (length × width × height in m):
+           box_01: 0.05×0.04×0.03   box_02: 0.07×0.05×0.04
+           box_03: 0.08×0.06×0.05   box_04: 0.10×0.07×0.06
+           box_05: 0.12×0.09×0.07   box_06: 0.14×0.10×0.07
+           box_07: 0.16×0.12×0.08   box_08: 0.18×0.13×0.09
+           box_09: 0.20×0.15×0.10   box_10: 0.23×0.17×0.12
+    -->
+
+    <model name="box_01">
+      <static>false</static>
+      <pose>-0.30 0.28 0.795 0 0 0.20</pose>
+      <link name="link">
+        <inertial><mass>0.15</mass><inertia><ixx>3.1e-5</ixx><ixy>0</ixy><ixz>0</ixz><iyy>4.3e-5</iyy><iyz>0</iyz><izz>5.1e-5</izz></inertia></inertial>
+        <collision name="col"><geometry><box><size>0.05 0.04 0.03</size></box></geometry><surface><friction><ode><mu>0.6</mu></ode></friction></surface></collision>
+        <visual name="vis"><geometry><box><size>0.05 0.04 0.03</size></box></geometry><material><ambient>0.76 0.60 0.42 1</ambient><diffuse>0.76 0.60 0.42 1</diffuse></material></visual>
+      </link>
+    </model>
+
+    <model name="box_02">
+      <static>false</static>
+      <pose>-0.10 0.30 0.800 0 0 -0.50</pose>
+      <link name="link">
+        <inertial><mass>0.15</mass><inertia><ixx>5.1e-5</ixx><ixy>0</ixy><ixz>0</ixz><iyy>8.1e-5</iyy><iyz>0</iyz><izz>9.3e-5</izz></inertia></inertial>
+        <collision name="col"><geometry><box><size>0.07 0.05 0.04</size></box></geometry><surface><friction><ode><mu>0.6</mu></ode></friction></surface></collision>
+        <visual name="vis"><geometry><box><size>0.07 0.05 0.04</size></box></geometry><material><ambient>0.90 0.50 0.10 1</ambient><diffuse>0.90 0.50 0.10 1</diffuse></material></visual>
+      </link>
+    </model>
+
+    <model name="box_03">
+      <static>false</static>
+      <pose>0.12 0.28 0.805 0 0 0.80</pose>
+      <link name="link">
+        <inertial><mass>0.15</mass><inertia><ixx>7.6e-5</ixx><ixy>0</ixy><ixz>0</ixz><iyy>1.1e-4</iyy><iyz>0</iyz><izz>1.25e-4</izz></inertia></inertial>
+        <collision name="col"><geometry><box><size>0.08 0.06 0.05</size></box></geometry><surface><friction><ode><mu>0.6</mu></ode></friction></surface></collision>
+        <visual name="vis"><geometry><box><size>0.08 0.06 0.05</size></box></geometry><material><ambient>0.85 0.20 0.20 1</ambient><diffuse>0.85 0.20 0.20 1</diffuse></material></visual>
+      </link>
+    </model>
+
+    <model name="box_04">
+      <static>false</static>
+      <pose>0.32 0.20 0.810 0 0 0.10</pose>
+      <link name="link">
+        <inertial><mass>0.15</mass><inertia><ixx>1.1e-4</ixx><ixy>0</ixy><ixz>0</ixz><iyy>1.7e-4</iyy><iyz>0</iyz><izz>1.9e-4</izz></inertia></inertial>
+        <collision name="col"><geometry><box><size>0.10 0.07 0.06</size></box></geometry><surface><friction><ode><mu>0.6</mu></ode></friction></surface></collision>
+        <visual name="vis"><geometry><box><size>0.10 0.07 0.06</size></box></geometry><material><ambient>0.20 0.40 0.85 1</ambient><diffuse>0.20 0.40 0.85 1</diffuse></material></visual>
+      </link>
+    </model>
+
+    <model name="box_05">
+      <static>false</static>
+      <pose>-0.32 0.08 0.815 0 0 1.20</pose>
+      <link name="link">
+        <inertial><mass>0.15</mass><inertia><ixx>1.6e-4</ixx><ixy>0</ixy><ixz>0</ixz><iyy>2.4e-4</iyy><iyz>0</iyz><izz>2.8e-4</izz></inertia></inertial>
+        <collision name="col"><geometry><box><size>0.12 0.09 0.07</size></box></geometry><surface><friction><ode><mu>0.6</mu></ode></friction></surface></collision>
+        <visual name="vis"><geometry><box><size>0.12 0.09 0.07</size></box></geometry><material><ambient>0.90 0.85 0.10 1</ambient><diffuse>0.90 0.85 0.10 1</diffuse></material></visual>
+      </link>
+    </model>
+
+    <model name="box_06">
+      <static>false</static>
+      <pose>0.00 0.10 0.815 0 0 -0.30</pose>
+      <link name="link">
+        <inertial><mass>0.15</mass><inertia><ixx>1.9e-4</ixx><ixy>0</ixy><ixz>0</ixz><iyy>3.1e-4</iyy><iyz>0</iyz><izz>3.7e-4</izz></inertia></inertial>
+        <collision name="col"><geometry><box><size>0.14 0.10 0.07</size></box></geometry><surface><friction><ode><mu>0.6</mu></ode></friction></surface></collision>
+        <visual name="vis"><geometry><box><size>0.14 0.10 0.07</size></box></geometry><material><ambient>0.20 0.75 0.30 1</ambient><diffuse>0.20 0.75 0.30 1</diffuse></material></visual>
+      </link>
+    </model>
+
+    <model name="box_07">
+      <static>false</static>
+      <pose>0.30 0.00 0.820 0 0 0.50</pose>
+      <link name="link">
+        <inertial><mass>0.15</mass><inertia><ixx>2.6e-4</ixx><ixy>0</ixy><ixz>0</ixz><iyy>4.0e-4</iyy><iyz>0</iyz><izz>5.0e-4</izz></inertia></inertial>
+        <collision name="col"><geometry><box><size>0.16 0.12 0.08</size></box></geometry><surface><friction><ode><mu>0.6</mu></ode></friction></surface></collision>
+        <visual name="vis"><geometry><box><size>0.16 0.12 0.08</size></box></geometry><material><ambient>0.60 0.20 0.80 1</ambient><diffuse>0.60 0.20 0.80 1</diffuse></material></visual>
+      </link>
+    </model>
+
+    <model name="box_08">
+      <static>false</static>
+      <pose>-0.25 -0.12 0.825 0 0 -1.00</pose>
+      <link name="link">
+        <inertial><mass>0.15</mass><inertia><ixx>3.1e-4</ixx><ixy>0</ixy><ixz>0</ixz><iyy>5.1e-4</iyy><iyz>0</iyz><izz>6.2e-4</izz></inertia></inertial>
+        <collision name="col"><geometry><box><size>0.18 0.13 0.09</size></box></geometry><surface><friction><ode><mu>0.6</mu></ode></friction></surface></collision>
+        <visual name="vis"><geometry><box><size>0.18 0.13 0.09</size></box></geometry><material><ambient>0.10 0.75 0.85 1</ambient><diffuse>0.10 0.75 0.85 1</diffuse></material></visual>
+      </link>
+    </model>
+
+    <model name="box_09">
+      <static>false</static>
+      <pose>0.08 -0.15 0.830 0 0 0.70</pose>
+      <link name="link">
+        <inertial><mass>0.15</mass><inertia><ixx>4.1e-4</ixx><ixy>0</ixy><ixz>0</ixz><iyy>6.3e-4</iyy><iyz>0</iyz><izz>7.8e-4</izz></inertia></inertial>
+        <collision name="col"><geometry><box><size>0.20 0.15 0.10</size></box></geometry><surface><friction><ode><mu>0.6</mu></ode></friction></surface></collision>
+        <visual name="vis"><geometry><box><size>0.20 0.15 0.10</size></box></geometry><material><ambient>0.95 0.40 0.70 1</ambient><diffuse>0.95 0.40 0.70 1</diffuse></material></visual>
+      </link>
+    </model>
+
+    <model name="box_10">
+      <static>false</static>
+      <pose>-0.05 -0.05 0.840 0 0 -0.20</pose>
+      <link name="link">
+        <inertial><mass>0.15</mass><inertia><ixx>5.4e-4</ixx><ixy>0</ixy><ixz>0</ixz><iyy>8.4e-4</iyy><iyz>0</iyz><izz>1.0e-3</izz></inertia></inertial>
+        <collision name="col"><geometry><box><size>0.23 0.17 0.12</size></box></geometry><surface><friction><ode><mu>0.6</mu></ode></friction></surface></collision>
+        <visual name="vis"><geometry><box><size>0.23 0.17 0.12</size></box></geometry><material><ambient>0.30 0.30 0.30 1</ambient><diffuse>0.30 0.30 0.30 1</diffuse></material></visual>
+      </link>
+    </model>
+
+    <!-- Overhead RGB camera: z=1.90, looking down, topic /camera/image_raw -->
+    <model name="overhead_camera">
+      <static>true</static>
+      <pose>0 0 1.90 0 1.5708 0</pose>
+      <link name="camera_link">
+        <visual name="body">
+          <geometry><box><size>0.06 0.06 0.04</size></box></geometry>
+          <material><ambient>0.1 0.1 0.1 1</ambient><diffuse>0.2 0.2 0.2 1</diffuse></material>
+        </visual>
+        <sensor name="camera" type="camera">
+          <always_on>true</always_on>
+          <update_rate>30</update_rate>
+          <camera>
+            <horizontal_fov>1.047</horizontal_fov>
+            <image>
+              <width>640</width>
+              <height>480</height>
+              <format>RGB_INT8</format>
+            </image>
+            <clip><near>0.1</near><far>10.0</far></clip>
+          </camera>
+          <topic>/camera/image_raw</topic>
+        </sensor>
+      </link>
+    </model>
+
+  </world>
+</sdf>

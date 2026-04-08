@@ -1,0 +1,5 @@
+path: /Users/polina/Documents/Stankin_3/Diplom/worlds/dataset_fixed
+train: images/train
+val: images/val
+nc: 1
+names: ['box']

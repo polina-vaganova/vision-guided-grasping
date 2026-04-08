@@ -1,0 +1,29 @@
+# ROS 2 build artifacts
+ros2_ws/build/
+ros2_ws/install/
+ros2_ws/log/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# YOLO training runs and datasets (large, regenerable)
+runs/
+worlds/dataset.zip
+worlds/dataset/
+*.zip
+
+# Gazebo runtime
+gazebo_projects/
+.gz/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
