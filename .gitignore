@@ -1,0 +1,14 @@
+# ROS 2 / colcon
+ros2_ws/build/
+ros2_ws/install/
+ros2_ws/log/
+__pycache__/
+*.pyc
+
+# training artefacts
+runs/
+*.tar.gz
+experiments/runs/**/weights/
+
+# OS
+.DS_Store

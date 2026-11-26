@@ -1,0 +1,195 @@
+<?xml version="1.0"?>
+<!--
+  ur5_gz.urdf.xacro
+  UR5 robot with gz_ros2_control/GazeboSimSystem hardware interface.
+  Robot base is fixed to world at pose (0, -0.58, 0.780) — top of robot_mount.
+  Spawn into Gazebo at origin (0,0,0) and set pose in spawn command.
+-->
+<robot name="ur" xmlns:xacro="http://wiki.ros.org/xacro">
+
+  <xacro:arg name="ur_type"              default="ur5"/>
+  <xacro:arg name="name"                 default="ur"/>
+  <xacro:arg name="tf_prefix"            default=""/>
+  <xacro:arg name="simulation_controllers"
+    default="$(find pick_place_bringup)/config/ur5_controllers.yaml"/>
+
+  <!-- ur_description provides kinematics, visuals, collisions -->
+  <xacro:include filename="$(find ur_description)/urdf/ur_macro.xacro"/>
+
+  <!-- World link (URDF validity: ur_robot macro needs parent to exist) -->
+  <link name="world"/>
+
+  <!-- ====================================================================
+       Подвижное основание манипулятора (1 поступательная DOF по оси X).
+       Выдвижная платформа расширяет рабочую зону без изменения кинематики
+       самого манипулятора.
+       ==================================================================== -->
+  <link name="base_slider_link">
+    <!-- Платформа — горизонтальная пластина 0.30×0.30×0.05 на уровне базы UR5 -->
+    <visual name="platform">
+      <origin xyz="0 0 -0.025" rpy="0 0 0"/>
+      <geometry><box size="0.30 0.30 0.05"/></geometry>
+      <material name="slider_mat"><color rgba="0.30 0.30 0.30 1.0"/></material>
+    </visual>
+    <!-- Стойка — колонна 0.14×0.14, высотой 0.73 от пола до платформы. -->
+    <visual name="pedestal">
+      <origin xyz="0 0 -0.415" rpy="0 0 0"/>
+      <geometry><box size="0.14 0.14 0.73"/></geometry>
+      <material name="pedestal_mat"><color rgba="0.30 0.30 0.35 1.0"/></material>
+    </visual>
+    <!-- Микро-collision (1мм сфера в полу) — заглушка, чтобы MoveIt не делал
+         collision из visual mesh.  Реально не должна ни с чем сталкиваться. -->
+    <collision name="dummy_col">
+      <origin xyz="0 0 -1.0" rpy="0 0 0"/>
+      <geometry><sphere radius="0.001"/></geometry>
+    </collision>
+    <!-- Без коллизии — slider_link находится в одной точке с base_link UR5
+         и иначе MoveIt считает что они в коллизии (SRDF их не парит как
+         adjacent). Физически платформа не соприкасается с препятствиями. -->
+    <inertial>
+      <mass value="2.0"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="0.05" ixy="0.0" ixz="0.0" iyy="0.05" iyz="0.0" izz="0.05"/>
+    </inertial>
+  </link>
+
+  <joint name="base_slider_joint" type="prismatic">
+    <parent link="world"/>
+    <child link="base_slider_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="-0.70" upper="0.70" effort="2000.0" velocity="1.5"/>
+    <dynamics damping="1.0" friction="0.1"/>
+  </joint>
+
+  <!-- UR5 kinematic chain (visual + collision + kinematics)
+       Прикреплена к base_slider_link, который скользит по оси X. -->
+  <xacro:ur_robot
+    name="$(arg name)"
+    tf_prefix="$(arg tf_prefix)"
+    parent="base_slider_link"
+    joint_limits_parameters_file="$(find ur_description)/config/$(arg ur_type)/joint_limits.yaml"
+    kinematics_parameters_file="$(find ur_description)/config/$(arg ur_type)/default_kinematics.yaml"
+    physical_parameters_file="$(find ur_description)/config/$(arg ur_type)/physical_parameters.yaml"
+    visual_parameters_file="$(find ur_description)/config/$(arg ur_type)/visual_parameters.yaml">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </xacro:ur_robot>
+
+  <!-- ======================================================
+       ros2_control: gz_ros2_control/GazeboSimSystem
+       Initial positions: "ready" pose looking at table
+         shoulder_lift = -1.9 rad
+         elbow         =  1.8 rad
+         wrist_1/2     = -1.5708 rad
+       ====================================================== -->
+  <ros2_control name="ur_gz_system" type="system">
+    <hardware>
+      <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+    </hardware>
+
+    <!-- Подвижное основание (1 поступательная DOF по оси X) -->
+    <joint name="base_slider_joint">
+      <command_interface name="position">
+        <param name="min">-0.70</param>
+        <param name="max"> 0.70</param>
+      </command_interface>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+    </joint>
+
+    <joint name="$(arg tf_prefix)shoulder_pan_joint">
+      <command_interface name="position">
+        <param name="min">-6.2832</param>
+        <param name="max"> 6.2832</param>
+      </command_interface>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+    </joint>
+
+    <joint name="$(arg tf_prefix)shoulder_lift_joint">
+      <command_interface name="position">
+        <param name="min">-6.2832</param>
+        <param name="max"> 6.2832</param>
+      </command_interface>
+      <state_interface name="position">
+        <param name="initial_value">-1.9</param>
+      </state_interface>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+    </joint>
+
+    <joint name="$(arg tf_prefix)elbow_joint">
+      <command_interface name="position">
+        <param name="min">-3.1416</param>
+        <param name="max"> 3.1416</param>
+      </command_interface>
+      <state_interface name="position">
+        <param name="initial_value">1.8</param>
+      </state_interface>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+    </joint>
+
+    <joint name="$(arg tf_prefix)wrist_1_joint">
+      <command_interface name="position">
+        <param name="min">-6.2832</param>
+        <param name="max"> 6.2832</param>
+      </command_interface>
+      <state_interface name="position">
+        <param name="initial_value">-1.5708</param>
+      </state_interface>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+    </joint>
+
+    <joint name="$(arg tf_prefix)wrist_2_joint">
+      <command_interface name="position">
+        <param name="min">-6.2832</param>
+        <param name="max"> 6.2832</param>
+      </command_interface>
+      <state_interface name="position">
+        <param name="initial_value">-1.5708</param>
+      </state_interface>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+    </joint>
+
+    <joint name="$(arg tf_prefix)wrist_3_joint">
+      <command_interface name="position">
+        <param name="min">-6.2832</param>
+        <param name="max"> 6.2832</param>
+      </command_interface>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+    </joint>
+  </ros2_control>
+
+  <!-- Gazebo plugin: activates gz_ros2_control inside Gazebo Harmonic -->
+  <gazebo>
+    <plugin filename="gz_ros2_control-system"
+            name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+      <parameters>$(arg simulation_controllers)</parameters>
+      <ros>
+        <namespace>/</namespace>
+      </ros>
+    </plugin>
+  </gazebo>
+
+
+</robot>

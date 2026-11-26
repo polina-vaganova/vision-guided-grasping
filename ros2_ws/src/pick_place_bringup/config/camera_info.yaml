@@ -1,0 +1,29 @@
+# Camera intrinsics for overhead_camera
+# Resolution: 640 x 480, HFOV: 1.4 rad (~80°)
+# fx = fy = (width/2) / tan(hfov/2) = 320 / tan(0.7) = 380.0
+image_width: 640
+image_height: 480
+camera_name: overhead_camera
+camera_matrix:
+  rows: 3
+  cols: 3
+  data: [380.0, 0.0, 320.0,
+         0.0, 380.0, 240.0,
+         0.0,   0.0,   1.0]
+distortion_model: plumb_bob
+distortion_coefficients:
+  rows: 1
+  cols: 5
+  data: [0.0, 0.0, 0.0, 0.0, 0.0]
+rectification_matrix:
+  rows: 3
+  cols: 3
+  data: [1.0, 0.0, 0.0,
+         0.0, 1.0, 0.0,
+         0.0, 0.0, 1.0]
+projection_matrix:
+  rows: 3
+  cols: 4
+  data: [380.0, 0.0, 320.0, 0.0,
+         0.0, 380.0, 240.0, 0.0,
+         0.0,   0.0,   1.0, 0.0]

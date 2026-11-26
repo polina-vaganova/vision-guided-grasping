@@ -1,0 +1,80 @@
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV LIBGL_ALWAYS_SOFTWARE=1
+ENV GZ_RENDERING_ENGINE=ogre
+ENV DISPLAY=:1
+ENV ROS_DISTRO=jazzy
+
+# ---------- 1. Base system tools (no ROS-specific packages yet) ----------
+RUN apt-get update && apt-get install -y \
+    curl gnupg lsb-release ca-certificates \
+    tigervnc-standalone-server novnc websockify \
+    libgl1 libegl1 mesa-utils libgl1-mesa-dri \
+    python3-pip git xterm \
+    && rm -rf /var/lib/apt/lists/*
+
+# ---------- 2. Add Gazebo Harmonic + ROS 2 Jazzy repos ----------
+RUN curl -fsSL https://packages.osrfoundation.org/gazebo.gpg \
+       -o /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] \
+       http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" \
+       > /etc/apt/sources.list.d/gazebo-stable.list \
+    && curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
+       -o /usr/share/keyrings/ros-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] \
+       http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" \
+       > /etc/apt/sources.list.d/ros2.list
+
+# ---------- 3. Install Gazebo + ROS 2 + MoveIt 2 + UR packages ----------
+RUN apt-get update && apt-get install -y \
+    gz-harmonic \
+    ros-jazzy-desktop \
+    ros-jazzy-moveit \
+    ros-jazzy-moveit-ros-planning-interface \
+    ros-jazzy-ros-gz \
+    ros-jazzy-gz-ros2-control \
+    ros-jazzy-ur-description \
+    ros-jazzy-ur-moveit-config \
+    ros-jazzy-ur-robot-driver \
+    ros-jazzy-joint-state-broadcaster \
+    ros-jazzy-joint-trajectory-controller \
+    ros-jazzy-controller-manager \
+    ros-jazzy-ros2-controllers \
+    ros-jazzy-rviz2 \
+    ros-jazzy-xacro \
+    python3-colcon-common-extensions \
+    python3-rosdep \
+    python3-vcstool \
+    && rm -rf /var/lib/apt/lists/*
+
+# ---------- 4. Python ML stack (ultralytics = YOLOv8/YOLOv11, PyTorch CPU) ----------
+# torch CPU-only wheel keeps image size reasonable; GPU variant needs CUDA base image.
+# torch.compile (PyTorch 2.x) is used by yolo_detector.py for faster inference.
+RUN pip3 install --no-cache-dir --break-system-packages --ignore-installed \
+        scipy \
+    && pip3 install --no-cache-dir --break-system-packages \
+        torch torchvision --index-url https://download.pytorch.org/whl/cpu \
+    && pip3 install --no-cache-dir --break-system-packages ultralytics
+
+# ---------- 5. rosdep ----------
+RUN rosdep init && rosdep update
+
+# ---------- 5. Workspace ----------
+RUN mkdir -p /ros2_ws/src
+WORKDIR /ros2_ws
+
+# ---------- 6. Runtime env ----------
+# GZ_SIM_SYSTEM_PLUGIN_PATH: makes gz_ros2_control-system discoverable by
+# Gazebo Harmonic when spawning robots. Must be container-wide (not just
+# entrypoint) so the gz sim server subprocess sees it.
+ENV GZ_SIM_SYSTEM_PLUGIN_PATH=/opt/ros/jazzy/lib
+
+# ---------- 7. Entrypoint ----------
+COPY start_ros2gz.sh /start.sh
+COPY save_world.sh /usr/local/bin/save_world
+RUN chmod +x /start.sh /usr/local/bin/save_world
+
+EXPOSE 8080
+
+CMD ["/start.sh"]

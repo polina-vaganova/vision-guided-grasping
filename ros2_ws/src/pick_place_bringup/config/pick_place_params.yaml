@@ -1,0 +1,64 @@
+pick_place_node:
+  ros__parameters:
+    # ── Robot spawn position in Gazebo world frame ──────────────────────────
+    # Must match the -x/-y/-z arguments in sim.launch.py (spawn_robot node).
+    robot_spawn_x:     0.0
+    robot_spawn_y:    -0.58
+    robot_spawn_z:     0.780
+
+    # ── Grasp geometry ───────────────────────────────────────────────────────
+    # Clearance above the grasp point for pre-grasp and post-place retreat (m).
+    # Increase if the gripper collides with the box on approach.
+    pre_grasp_height:  0.10
+
+    # ── Destination tray — Gazebo world frame ─────────────────────────────
+    # Two trays at (-0.50, -0.40) and (+0.50, -0.40), basin top z=0.78.
+    # Default place pose = left tray center (overridden by TRAY_GRID in node).
+    place_x:          -1.10
+    place_y:          -0.45
+    # place_z = tray bottom (0.720) + drop clearance
+    place_z:           0.82
+
+    # ── MoveIt 2 planning ────────────────────────────────────────────────────
+    planning_group:    "ur_manipulator"
+    eef_link:          "tool0"
+    planning_time:     10.0   # seconds per planning call (increase for hard poses)
+
+    # ── Experiment ────────────────────────────────────────────────────────
+    use_yolo:          true              # false → baseline mode (gz ground truth)
+    noise_xy_m:        0.015             # ±N meters uniform noise on grasp x/y
+    metrics_csv:       "/experiments/metrics.csv"
+    max_consecutive_failures: 100        # disable early stop for experiment runs
+    n_scenarios:       2
+    max_velocity:      0.7    # fraction of joint velocity limits (0–1) — чуть медленнее чтобы груз не отставал
+    max_acceleration:  0.7    # fraction of joint acceleration limits (0–1)
+
+    # ── Planner ─────────────────────────────────────────────────────────────
+    # "pilz_industrial_motion_planner" + "PTP"  — joint-space trapezoid,
+    #    deterministic, never wraps through the back of the workspace.
+    # "ompl" + "RRTConnectkConfigDefault" — fallback (может ходить странно,
+    #    но путь всё равно ограничен path_constraints из _JOINT_BOUNDS).
+    planner_pipeline:  "pilz_industrial_motion_planner"
+    planner_id:        "PTP"
+
+    # ── Gripper "pointing down" calibration quaternion (x, y, z, w) ─────────
+    # Default (1, 0, 0, 0) = 180° around world X → tool0 Z → world −Z.
+    # If the gripper is NOT pointing straight down in simulation, adjust here:
+    #   Run sim, publish a test pose, observe tool0 orientation in RViz,
+    #   then rotate these values until tool0 Z aligns with world −Z.
+    qd_x:  1.0
+    qd_y:  0.0
+    qd_z:  0.0
+    qd_w:  0.0
+
+gz_attach_node:
+  ros__parameters:
+    world_name:        "pick_and_place"
+    gripper_link:      "tool0"
+    robot_spawn_x:     0.0
+    robot_spawn_y:    -0.58
+    robot_spawn_z:     0.780
+    track_hz:          400.0  # Hz — обновление позиции груза, чтобы коробка не отставала
+    # Vertical offset from tool0 origin to box centre during transport (m).
+    # Positive = below tool0 (towards fingertips). 0 = box centre at tool0.
+    gripper_z_offset:  0.0

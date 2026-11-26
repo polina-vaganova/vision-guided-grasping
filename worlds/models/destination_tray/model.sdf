@@ -1,0 +1,122 @@
+<?xml version="1.0"?>
+<sdf version="1.9">
+  <model name="destination_tray">
+    <static>true</static>
+
+    <!--
+      Лоток назначения, прижатый к правому краю стола.
+
+      При world pose (0.825, 0, 0):
+        Левая стенка (outer face) = 0.825 - 0.275 = 0.550 = правый край стола ✓
+        Y-габарит = 0.74 м = ширина стола ✓  (outer Y: −0.37 … +0.37)
+        Поверхность дна изнутри: z = 0.720
+        Верх стенок:             z = 0.780  (уровень столешницы)
+
+      Внутренние размеры лотка: 0.51 × 0.70 м
+      Зона укладки (доступна UR5 с base=(0,−0.58,0.780)):
+        X ≈ 0.58–0.70,  Y ≈ −0.30 … −0.15  (левая передняя часть)
+    -->
+    <link name="tray_link">
+
+      <!-- === СТОЙКА (под центром лотка) === -->
+      <visual name="pole_vis">
+        <pose>0 0 0.340 0 0 0</pose>
+        <geometry><box><size>0.10 0.10 0.68</size></box></geometry>
+        <material>
+          <ambient>0.22 0.22 0.26 1</ambient>
+          <diffuse>0.30 0.30 0.35 1</diffuse>
+          <specular>0.55 0.55 0.55 1</specular>
+        </material>
+      </visual>
+      <collision name="pole_col">
+        <pose>0 0 0.340 0 0 0</pose>
+        <geometry><box><size>0.10 0.10 0.68</size></box></geometry>
+      </collision>
+
+      <!-- Крепёжная плита -->
+      <visual name="plate_vis">
+        <pose>0 0 0.690 0 0 0</pose>
+        <geometry><box><size>0.22 0.22 0.02</size></box></geometry>
+        <material>
+          <ambient>0.18 0.18 0.20 1</ambient>
+          <diffuse>0.22 0.22 0.25 1</diffuse>
+          <specular>0.7 0.7 0.7 1</specular>
+        </material>
+      </visual>
+      <collision name="plate_col">
+        <pose>0 0 0.690 0 0 0</pose>
+        <geometry><box><size>0.22 0.22 0.02</size></box></geometry>
+      </collision>
+
+      <!-- === ЛОТОК 0.55 × 0.74 м ===
+           left_wall_center_x  = −(0.55/2 − 0.02/2) = −0.265
+           left_wall_outer_x   = −0.265 − 0.01      = −0.275
+           В мире: 0.825 + (−0.275) = 0.550 = правый край стола ✓
+
+           front_wall_center_y = −(0.74/2 − 0.02/2) = −0.360
+           В мире: 0 + (−0.360) = −0.360 ≈ −0.37 (= передний край стола) ✓
+      -->
+
+      <!-- Дно -->
+      <visual name="bottom_vis">
+        <pose>0 0 0.710 0 0 0</pose>
+        <geometry><box><size>0.55 0.74 0.02</size></box></geometry>
+        <material>
+          <ambient>0.70 0.55 0.00 1</ambient>
+          <diffuse>0.85 0.68 0.05 1</diffuse>
+          <specular>0.15 0.12 0.08 1</specular>
+        </material>
+      </visual>
+      <collision name="bottom_col">
+        <pose>0 0 0.710 0 0 0</pose>
+        <geometry><box><size>0.55 0.74 0.02</size></box></geometry>
+        <surface><friction><ode><mu>0.6</mu><mu2>0.6</mu2></ode></friction></surface>
+      </collision>
+
+      <!-- Левая стенка −X (вплотную к столу, outer face = X_table_right = 0.550) -->
+      <visual name="wall_left_vis">
+        <pose>-0.265 0 0.740 0 0 0</pose>
+        <geometry><box><size>0.02 0.74 0.06</size></box></geometry>
+        <material><ambient>0.70 0.55 0.00 1</ambient><diffuse>0.85 0.68 0.05 1</diffuse></material>
+      </visual>
+      <collision name="wall_left_col">
+        <pose>-0.265 0 0.740 0 0 0</pose>
+        <geometry><box><size>0.02 0.74 0.06</size></box></geometry>
+      </collision>
+
+      <!-- Правая стенка +X -->
+      <visual name="wall_right_vis">
+        <pose>0.265 0 0.740 0 0 0</pose>
+        <geometry><box><size>0.02 0.74 0.06</size></box></geometry>
+        <material><ambient>0.70 0.55 0.00 1</ambient><diffuse>0.85 0.68 0.05 1</diffuse></material>
+      </visual>
+      <collision name="wall_right_col">
+        <pose>0.265 0 0.740 0 0 0</pose>
+        <geometry><box><size>0.02 0.74 0.06</size></box></geometry>
+      </collision>
+
+      <!-- Передняя стенка −Y (flush с передним краем стола −0.37) -->
+      <visual name="wall_front_vis">
+        <pose>0 -0.360 0.740 0 0 0</pose>
+        <geometry><box><size>0.55 0.02 0.06</size></box></geometry>
+        <material><ambient>0.70 0.55 0.00 1</ambient><diffuse>0.85 0.68 0.05 1</diffuse></material>
+      </visual>
+      <collision name="wall_front_col">
+        <pose>0 -0.360 0.740 0 0 0</pose>
+        <geometry><box><size>0.55 0.02 0.06</size></box></geometry>
+      </collision>
+
+      <!-- Задняя стенка +Y -->
+      <visual name="wall_back_vis">
+        <pose>0 0.360 0.740 0 0 0</pose>
+        <geometry><box><size>0.55 0.02 0.06</size></box></geometry>
+        <material><ambient>0.70 0.55 0.00 1</ambient><diffuse>0.85 0.68 0.05 1</diffuse></material>
+      </visual>
+      <collision name="wall_back_col">
+        <pose>0 0.360 0.740 0 0 0</pose>
+        <geometry><box><size>0.55 0.02 0.06</size></box></geometry>
+      </collision>
+
+    </link>
+  </model>
+</sdf>

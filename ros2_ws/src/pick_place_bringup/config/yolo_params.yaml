@@ -1,0 +1,19 @@
+# YOLOv8-OBB detector parameters
+# Loaded by sim.launch.py and passed to the yolo_detector node.
+#
+# model_path — ultralytics model identifier or absolute path to a .pt file.
+#   • 'yolov8n-obb.pt'   — nano OBB pretrained on DOTA (auto-downloaded)
+#   • 'yolov8s-obb.pt'   — small OBB, higher accuracy
+#   • '/models/boxes_obb.pt' — custom fine-tuned model (place in ros2_ws/models/)
+#
+# For the diploma experiment a custom model trained on Gazebo screenshots should
+# be placed at model_path and the label mapping should match box_small / box_medium /
+# box_large.  Until the custom model is ready the pretrained OBB model is used
+# (objects may be labelled with DOTA class names, but geometry and angle are valid).
+
+yolo_detector:
+  ros__parameters:
+    model_path: "/worlds/models/yolo_boxes.pt"   # custom model trained on Gazebo dataset
+    conf:       0.05                             # confidence threshold [0..1]
+    device:     "cpu"              # 'cpu' or 'cuda:0'
+    frame_id:   "camera_link"
