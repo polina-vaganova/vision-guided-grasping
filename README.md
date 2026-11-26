@@ -5,8 +5,15 @@ YOLOv8-OBB finds the boxes, stereo disparity recovers their 3D pose, MoveIt 2 pl
 the grasp. Everything runs locally in Gazebo Harmonic — no depth sensor, no cloud inference.
 
 <p align="center">
+  <img src="docs/pick_place_demo.gif" width="80%"><br>
+  <sub>Full run, 13× speed: the arm clears the table box by box, repositioning along the rail
+  between picks. Source clip: <a href="docs/pick_place_demo.mp4">docs/pick_place_demo.mp4</a></sub>
+</p>
+
+<p align="center">
   <img src="experiments/inference_demo/detection_2_scene_0111_left.png" width="45%">
-  <img src="experiments/inference_demo/detection_1_scene_0437_right.png" width="45%">
+  <img src="experiments/inference_demo/detection_1_scene_0437_right.png" width="45%"><br>
+  <sub>YOLOv8-OBB detections from the left and right overhead cameras</sub>
 </p>
 
 ## Pipeline
